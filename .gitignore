@@ -54,4 +54,5 @@ debug_*.py
 
 # Temporary
 *.tmp
-*.bak
+*.bak.venv/
+.pytest_cache/
