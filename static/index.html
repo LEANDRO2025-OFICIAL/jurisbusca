@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JurisBusca - Busca de Jurisprudencia</title>
+<style>
+:root {
+  --ink: #1A2233; --muted: #536072; --accent: #0B5E8A;
+  --light: #EEF3F7; --line: #C7D3DC; --warn: #8A3B12;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  color: var(--ink); background: #F7F9FB; line-height: 1.55; font-size: 15px;
+}
+.container { max-width: 960px; margin: 0 auto; padding: 24px 20px 48px; }
+header { background: linear-gradient(135deg, #0B5E8A 0%, #1A2233 100%); color: #fff; padding: 32px 24px; border-radius: 8px; margin-bottom: 24px; }
+header h1 { font-size: 28px; margin-bottom: 4px; }
+header p { opacity: .9; font-size: 14px; }
+.search-box { display: flex; gap: 8px; margin-bottom: 16px; }
+.search-box input { flex: 1; padding: 12px 16px; font-size: 16px; border: 2px solid var(--line); border-radius: 6px; outline: none; }
+.search-box input:focus { border-color: var(--accent); }
+.search-box button { padding: 12px 24px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: 600; }
+.search-box button:hover { background: #094a6e; }
+.filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.filters select { padding: 8px 12px; border: 1px solid var(--line); border-radius: 4px; font-size: 14px; }
+.stats { background: var(--light); padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: var(--muted); }
+.results { display: flex; flex-direction: column; gap: 16px; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+.card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+.card-tribunal { background: var(--accent); color: #fff; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.card-area { background: var(--light); color: var(--accent); padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.card-numero { font-weight: 700; font-size: 14px; color: var(--ink); }
+.card-data { font-size: 12px; color: var(--muted); }
+.card-ementa { margin: 8px 0; font-size: 14px; line-height: 1.5; }
+.card-ementa mark { background: #FFF3CD; padding: 0 2px; border-radius: 2px; }
+.card-actions { margin-top: 10px; }
+.card-actions a { color: var(--accent); font-size: 13px; font-weight: 600; margin-right: 12px; }
+.card-actions a:hover { text-decoration: underline; }
+.empty { text-align: center; padding: 40px; color: var(--muted); }
+.loading { text-align: center; padding: 20px; color: var(--muted); }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.5); z-index: 100; }
+.modal-content { background: #fff; max-width: 800px; margin: 40px auto; padding: 24px; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
+.modal-close { float: right; cursor: pointer; font-size: 24px; color: var(--muted); }
+.modal h2 { color: var(--accent); margin-bottom: 12px; }
+.modal .field { margin-bottom: 12px; }
+.modal .field label { font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; }
+.modal .field p { margin-top: 4px; font-size: 14px; }
+@media (max-width: 600px) { .search-box { flex-direction: column; } .filters { flex-direction: column; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>JurisBusca</h1>
+    <p>Busca de jurisprudencia, acordaos, sumulas e normas - Prototipo MVP</p>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="query" placeholder="Buscar jurisprudencia (ex: dano moral, ICMS, rescisao indireta)..." onkeydown="if(event.key==='Enter') doSearch()">
+    <button onclick="doSearch()">Buscar</button>
+  </div>
+
+  <div class="filters">
+    <select id="tribunal">
+      <option value="">Todos os tribunais</option>
+    </select>
+    <select id="area">
+      <option value="">Todas as areas</option>
+    </select>
+  </div>
+
+  <div class="stats" id="stats">Carregando estatisticas...</div>
+
+  <div class="results" id="results">
+    <div class="empty">Digite um termo de busca acima para encontrar jurisprudencia.</div>
+  </div>
+</div>
+
+<!-- Modal de detalhe -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal()">&times;</span>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const API = '';
+
+async function loadStats() {
+  const res = await fetch(API + '/api/stats');
+  const data = await res.json();
+  document.getElementById('stats').textContent =
+    `Total: ${data.total_acordaos} acordaos | Tribunais: ${data.tribunais.join(', ')} | Areas: ${data.areas.join(', ')}`;
+
+  const selT = document.getElementById('tribunal');
+  data.tribunais.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    selT.appendChild(opt);
+  });
+  const selA = document.getElementById('area');
+  data.areas.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a; opt.textContent = a;
+    selA.appendChild(opt);
+  });
+}
+
+async function doSearch() {
+  const q = document.getElementById('query').value.trim();
+  if (!q) return;
+  const tribunal = document.getElementById('tribunal').value;
+  const area = document.getElementById('area').value;
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = '<div class="loading">Buscando...</div>';
+
+  let url = `${API}/api/search?q=${encodeURIComponent(q)}&limit=30`;
+  if (tribunal) url += `&tribunal=${encodeURIComponent(tribunal)}`;
+  if (area) url += `&area=${encodeURIComponent(area)}`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if (data.results.length === 0) {
+    resultsDiv.innerHTML = '<div class="empty">Nenhum resultado encontrado para "' + q + '".</div>';
+    return;
+  }
+
+  resultsDiv.innerHTML = data.results.map(r => `
+    <div class="card">
+      <div class="card-header">
+        <span class="card-tribunal">${r.tribunal}</span>
+        <span class="card-area">${r.area || 'N/A'}</span>
+        <span class="card-numero">${r.numero || 'S/N'}</span>
+        <span class="card-data">${r.data_julgamento || ''}</span>
+      </div>
+      <div class="card-ementa">${r.snippet || r.ementa || ''}</div>
+      <div class="card-actions">
+        <a href="#" onclick="showDetail(${r.id}); return false;">Ver acordao completo</a>
+        ${r.url_origem ? '<a href="' + r.url_origem + '" target="_blank">Fonte original</a>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function showDetail(id) {
+  const res = await fetch(API + '/api/acordao/' + id);
+  const data = await res.json();
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <h2>${data.tribunal} - ${data.numero || 'S/N'}</h2>
+    <div class="field"><label>Relator</label><p>${data.relator || 'N/A'}</p></div>
+    <div class="field"><label>Data do Julgamento</label><p>${data.data_julgamento || 'N/A'}</p></div>
+    <div class="field"><label>Area</label><p>${data.area || 'N/A'}</p></div>
+    <div class="field"><label>Tema</label><p>${data.tema || 'N/A'}</p></div>
+    <div class="field"><label>Ementa</label><p>${data.ementa || 'N/A'}</p></div>
+    <div class="field"><label>Relatorio</label><p>${data.relatorio || 'N/A'}</p></div>
+    <div class="field"><label>Voto</label><p>${data.voto || 'N/A'}</p></div>
+    <div class="field"><label>Dispositivo</label><p>${data.dispositivo || 'N/A'}</p></div>
+    ${data.url_origem ? '<div class="field"><label>Fonte</label><p><a href="' + data.url_origem + '" target="_blank">' + data.url_origem + '</a></p></div>' : ''}
+  `;
+  document.getElementById('modal').style.display = 'block';
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+// Fecha modal ao clicar fora
+window.onclick = function(e) {
+  if (e.target.id === 'modal') closeModal();
+};
+
+loadStats();
+</script>
+</body>
+</html>
+"
