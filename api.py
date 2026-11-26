@@ -47,6 +47,7 @@ from busca_vetorial import (
 from rag import buscar_e_montar_rag, estatisticas as estatisticas_rag
 from scrapers import buscar_todos
 from dados import get_tribunais, get_areas, total_tribunais, total_areas
+from datajud import buscar_datajud, listar_tribunais_datajud, TRIBUNAL_CODIGOS
 
 app = FastAPI(
     title="JurisBusca - Busca de Jurisprudencia + IA",
@@ -131,6 +132,26 @@ def api_tribunais_lista():
 @app.get("/api/areas-lista")
 def api_areas_lista():
     return {"areas": get_areas(), "total": total_areas()}
+
+
+# === ENDPOINT CNJ DATAJUD ===
+
+
+@app.get("/api/datajud/tribunais")
+def api_datajud_tribunais():
+    return {
+        "tribunais": listar_tribunais_datajud(),
+        "total": len(listar_tribunais_datajud()),
+    }
+
+
+@app.get("/api/datajud/buscar")
+def api_datajud_buscar(
+    tribunal: str = Query(..., description="Sigla do tribunal (ex: STJ, TJSP)"),
+    q: str = Query(..., description="Termo de busca"),
+    limite: int = Query(10, ge=1, le=50),
+):
+    return {"resultados": buscar_datajud(tribunal, q, limite=limite)}
 
 
 # === ENDPOINT DE BUSCA VETORIAL ===
