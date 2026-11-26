@@ -7,11 +7,12 @@ Endpoint base: https://api-publica.datajud.cnj.jus.br/api_publica/{tribunal}/_se
 Chave publica: APIKey cnj-datajud (para uso publico)
 """
 
+import os
 import requests
 import json
 
 DATAJUD_BASE = "https://api-publica.datajud.cnj.jus.br"
-DATAJUD_APIKEY = "APIKey cnj-datajud"
+DATAJUD_APIKEY = os.environ.get("DATAJUD_APIKEY", "APIKey cnj-datajud")
 
 # NOTA: A API DataJud CNJ requer autenticacao. A chave publica 'cnj-datajud'
 # nao funciona em todos os endpoints. Se receber 401, forneca sua propria chave API.
