@@ -3,21 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JurisBusca - Busca de Jurisprudencia</title>
+<title>JurisBusca - Busca de Jurisprudencia com IA</title>
 <style>
 :root {
   --ink: #1A2233; --muted: #536072; --accent: #0B5E8A;
   --light: #EEF3F7; --line: #C7D3DC; --warn: #8A3B12;
+  --success: #2E7D32; --bg: #F7F9FB;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: "Segoe UI", Arial, Helvetica, sans-serif;
-  color: var(--ink); background: #F7F9FB; line-height: 1.55; font-size: 15px;
+  color: var(--ink); background: var(--bg); line-height: 1.55; font-size: 15px;
 }
-.container { max-width: 960px; margin: 0 auto; padding: 24px 20px 48px; }
+.container { max-width: 1100px; margin: 0 auto; padding: 24px 20px 48px; }
 header { background: linear-gradient(135deg, #0B5E8A 0%, #1A2233 100%); color: #fff; padding: 32px 24px; border-radius: 8px; margin-bottom: 24px; }
 header h1 { font-size: 28px; margin-bottom: 4px; }
 header p { opacity: .9; font-size: 14px; }
+nav.tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+nav.tabs button { padding: 10px 18px; border: 1px solid var(--line); background: #fff; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); }
+nav.tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 .search-box { display: flex; gap: 8px; margin-bottom: 16px; }
 .search-box input { flex: 1; padding: 12px 16px; font-size: 16px; border: 2px solid var(--line); border-radius: 6px; outline: none; }
 .search-box input:focus { border-color: var(--accent); }
@@ -25,7 +31,8 @@ header p { opacity: .9; font-size: 14px; }
 .search-box button:hover { background: #094a6e; }
 .filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .filters select { padding: 8px 12px; border: 1px solid var(--line); border-radius: 4px; font-size: 14px; }
-.stats { background: var(--light); padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: var(--muted); }
+.stats { background: var(--light); padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.stats .export-btn { padding: 6px 12px; background: var(--success); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; }
 .results { display: flex; flex-direction: column; gap: 16px; }
 .card { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
 .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
@@ -37,7 +44,7 @@ header p { opacity: .9; font-size: 14px; }
 .card-ementa { margin: 8px 0; font-size: 14px; line-height: 1.5; }
 .card-ementa mark { background: #FFF3CD; padding: 0 2px; border-radius: 2px; }
 .card-actions { margin-top: 10px; }
-.card-actions a { color: var(--accent); font-size: 13px; font-weight: 600; margin-right: 12px; }
+.card-actions a { color: var(--accent); font-size: 13px; font-weight: 600; margin-right: 12px; cursor: pointer; }
 .card-actions a:hover { text-decoration: underline; }
 .empty { text-align: center; padding: 40px; color: var(--muted); }
 .loading { text-align: center; padding: 20px; color: var(--muted); }
@@ -48,6 +55,23 @@ header p { opacity: .9; font-size: 14px; }
 .modal .field { margin-bottom: 12px; }
 .modal .field label { font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; }
 .modal .field p { margin-top: 4px; font-size: 14px; }
+.dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.dash-card { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 20px; text-align: center; }
+.dash-card .number { font-size: 32px; font-weight: 700; color: var(--accent); }
+.dash-card .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.history { background: var(--light); padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; }
+.history h4 { margin-bottom: 8px; color: var(--ink); }
+.history ul { list-style: none; padding: 0; }
+.history li { padding: 4px 0; font-size: 13px; color: var(--muted); cursor: pointer; }
+.history li:hover { color: var(--accent); }
+.ia-section { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+.ia-section h3 { color: var(--accent); margin-bottom: 8px; }
+.ia-section p { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+.ia-section button { padding: 8px 16px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; margin-right: 8px; margin-bottom: 8px; }
+.ia-section button:hover { background: #094a6e; }
+.ia-result { background: var(--light); padding: 12px; border-radius: 6px; margin-top: 12px; font-size: 13px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+.upload-box { border: 2px dashed var(--line); border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 16px; }
+.upload-box input { margin-top: 8px; }
 @media (max-width: 600px) { .search-box { flex-direction: column; } .filters { flex-direction: column; } }
 </style>
 </head>
@@ -55,27 +79,83 @@ header p { opacity: .9; font-size: 14px; }
 <div class="container">
   <header>
     <h1>JurisBusca</h1>
-    <p>Busca de jurisprudencia, acordaos, sumulas e normas - Prototipo MVP</p>
+    <p>Busca de Jurisprudencia com IA - Prototipo MVP completo</p>
   </header>
 
-  <div class="search-box">
-    <input type="text" id="query" placeholder="Buscar jurisprudencia (ex: dano moral, ICMS, rescisao indireta)..." onkeydown="if(event.key==='Enter') doSearch()">
-    <button onclick="doSearch()">Buscar</button>
+  <nav class="tabs">
+    <button class="active" onclick="showTab('busca')">Busca</button>
+    <button onclick="showTab('dashboard')">Dashboard</button>
+    <button onclick="showTab('ia')">IA e Prompts</button>
+    <button onclick="showTab('parser')">Parser de PDF</button>
+    <button onclick="showTab('historico')">Historico</button>
+  </nav>
+
+  <!-- TAB: Busca -->
+  <div id="busca" class="tab-content active">
+    <div class="search-box">
+      <input type="text" id="query" placeholder="Buscar jurisprudencia (ex: dano moral, ICMS, rescisao indireta)..." onkeydown="if(event.key==='Enter') doSearch()">
+      <button onclick="doSearch()">Buscar</button>
+    </div>
+    <div class="filters">
+      <select id="tribunal">
+        <option value="">Todos os tribunais</option>
+      </select>
+      <select id="area">
+        <option value="">Todas as areas</option>
+      </select>
+      <select id="modo">
+        <option value="fulltext">Busca Full-Text</option>
+        <option value="semantico">Busca Semantica (IA)</option>
+        <option value="rag">RAG (IA com resposta)</option>
+      </select>
+    </div>
+    <div class="stats" id="stats">Carregando estatisticas...</div>
+    <div class="results" id="results">
+      <div class="empty">Digite um termo de busca acima para encontrar jurisprudencia.</div>
+    </div>
   </div>
 
-  <div class="filters">
-    <select id="tribunal">
-      <option value="">Todos os tribunais</option>
-    </select>
-    <select id="area">
-      <option value="">Todas as areas</option>
-    </select>
+  <!-- TAB: Dashboard -->
+  <div id="dashboard" class="tab-content">
+    <div class="dashboard" id="dash-cards"></div>
+    <h3 style="margin-bottom:12px;">Distribuicao por Tribunal</h3>
+    <div id="dash-tribunais" style="margin-bottom:20px;"></div>
+    <h3 style="margin-bottom:12px;">Distribuicao por Area</h3>
+    <div id="dash-areas"></div>
   </div>
 
-  <div class="stats" id="stats">Carregando estatisticas...</div>
+  <!-- TAB: IA e Prompts -->
+  <div id="ia" class="tab-content">
+    <h3 style="margin-bottom:16px;">Prompts de IA Juridica</h3>
+    <div id="prompts-list"></div>
+    <h3 style="margin:20px 0 16px;">Agentes MCP do Curso</h3>
+    <div id="agentes-list"></div>
+    <h3 style="margin:20px 0 16px;">Metodos do Curso</h3>
+    <div id="metodos-list"></div>
+  </div>
 
-  <div class="results" id="results">
-    <div class="empty">Digite um termo de busca acima para encontrar jurisprudencia.</div>
+  <!-- TAB: Parser de PDF -->
+  <div id="parser" class="tab-content">
+    <div class="upload-box">
+      <h3>Parser de Acordao (PDF)</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Envie um PDF de acordao para extrair campos estruturados automaticamente.</p>
+      <input type="file" id="pdf-file" accept=".pdf">
+      <button onclick="uploadPdf()" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;margin-top:8px;">Processar PDF</button>
+    </div>
+    <div id="parser-result"></div>
+  </div>
+
+  <!-- TAB: Historico -->
+  <div id="historico" class="tab-content">
+    <div class="history">
+      <h4>Historico de Buscas</h4>
+      <ul id="history-list"></ul>
+      <button onclick="clearHistory()" style="padding:6px 12px;background:#e0e0e0;border:none;border-radius:4px;cursor:pointer;margin-top:8px;font-size:12px;">Limpar historico</button>
+    </div>
+    <div class="history">
+      <h4>Favoritos</h4>
+      <ul id="fav-list"></ul>
+    </div>
   </div>
 </div>
 
@@ -89,12 +169,26 @@ header p { opacity: .9; font-size: 14px; }
 
 <script>
 const API = '';
+let history = JSON.parse(localStorage.getItem('jurisbusca_history') || '[]');
+let favorites = JSON.parse(localStorage.getItem('jurisbusca_favorites') || '[]');
+
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  event.target.classList.add('active');
+  if (tab === 'dashboard') loadDashboard();
+  if (tab === 'ia') loadIA();
+  if (tab === 'historico') loadHistory();
+}
 
 async function loadStats() {
   const res = await fetch(API + '/api/stats');
   const data = await res.json();
-  document.getElementById('stats').textContent =
-    `Total: ${data.total_acordaos} acordaos | Tribunais: ${data.tribunais.join(', ')} | Areas: ${data.areas.join(', ')}`;
+  document.getElementById('stats').innerHTML = 
+    `Total: ${data.total_acordaos} acordaos | Tribunais: ${data.tribunais.join(', ')} | Areas: ${data.areas.join(', ')} ` +
+    `<button class="export-btn" onclick="exportResults('csv')">Exportar CSV</button> ` +
+    `<button class="export-btn" onclick="exportResults('json')">Exportar JSON</button>`;
 
   const selT = document.getElementById('tribunal');
   data.tribunais.forEach(t => {
@@ -115,22 +209,61 @@ async function doSearch() {
   if (!q) return;
   const tribunal = document.getElementById('tribunal').value;
   const area = document.getElementById('area').value;
+  const modo = document.getElementById('modo').value;
   const resultsDiv = document.getElementById('results');
   resultsDiv.innerHTML = '<div class="loading">Buscando...</div>';
 
-  let url = `${API}/api/search?q=${encodeURIComponent(q)}&limit=30`;
+  // Salva no histórico
+  addToHistory(q);
+
+  if (modo === 'rag') {
+    let url = `${API}/api/rag?q=${encodeURIComponent(q)}&limite=5`;
+    if (tribunal) url += `&tribunal=${encodeURIComponent(tribunal)}`;
+    if (area) url += `&area=${encodeURIComponent(area)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    let html = '';
+    if (data.resultados && data.resultados.length > 0) {
+      html = '<div class="card"><h3 style="color:var(--accent)">Resposta RAG</h3><div class="ia-result">' + 
+             (data.contexto || '').replace(/\n/g, '<br>') + '</div></div>';
+      html += data.resultados.map(r => `
+        <div class="card">
+          <div class="card-header">
+            <span class="card-tribunal">${r.tribunal}</span>
+            <span class="card-area">${r.area || 'N/A'}</span>
+            <span class="card-numero">${r.numero || 'S/N'}</span>
+            <span class="card-data">${r.data_julgamento || ''}</span>
+          </div>
+          <div class="card-ementa">${(r.trecho || '').replace(/</g, '&lt;')}</div>
+          <div class="card-actions">
+            <a href="#" onclick="showDetail(${r.id}); return false;">Ver acordao completo</a>
+            <a href="#" onclick="addFavorite(${r.id}); return false;">Favoritar</a>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      html = '<div class="empty">Nenhum resultado encontrado para "' + q + '".</div>';
+    }
+    resultsDiv.innerHTML = html;
+    return;
+  }
+
+  let url = modo === 'semantico' 
+    ? `${API}/api/search-semantico?q=${encodeURIComponent(q)}&limite=20`
+    : `${API}/api/search?q=${encodeURIComponent(q)}&limit=30`;
   if (tribunal) url += `&tribunal=${encodeURIComponent(tribunal)}`;
   if (area) url += `&area=${encodeURIComponent(area)}`;
 
   const res = await fetch(url);
   const data = await res.json();
+  const items = data.results || data.resultados || [];
 
-  if (data.results.length === 0) {
+  if (items.length === 0) {
     resultsDiv.innerHTML = '<div class="empty">Nenhum resultado encontrado para "' + q + '".</div>';
     return;
   }
 
-  resultsDiv.innerHTML = data.results.map(r => `
+  resultsDiv.innerHTML = items.map(r => `
     <div class="card">
       <div class="card-header">
         <span class="card-tribunal">${r.tribunal}</span>
@@ -138,10 +271,10 @@ async function doSearch() {
         <span class="card-numero">${r.numero || 'S/N'}</span>
         <span class="card-data">${r.data_julgamento || ''}</span>
       </div>
-      <div class="card-ementa">${r.snippet || r.ementa || ''}</div>
+      <div class="card-ementa">${(r.snippet || r.trecho || r.ementa || '').replace(/</g, '&lt;')}</div>
       <div class="card-actions">
         <a href="#" onclick="showDetail(${r.id}); return false;">Ver acordao completo</a>
-        ${r.url_origem ? '<a href="' + r.url_origem + '" target="_blank">Fonte original</a>' : ''}
+        <a href="#" onclick="addFavorite(${r.id}); return false;">Favoritar</a>
       </div>
     </div>
   `).join('');
@@ -157,10 +290,10 @@ async function showDetail(id) {
     <div class="field"><label>Data do Julgamento</label><p>${data.data_julgamento || 'N/A'}</p></div>
     <div class="field"><label>Area</label><p>${data.area || 'N/A'}</p></div>
     <div class="field"><label>Tema</label><p>${data.tema || 'N/A'}</p></div>
-    <div class="field"><label>Ementa</label><p>${data.ementa || 'N/A'}</p></div>
-    <div class="field"><label>Relatorio</label><p>${data.relatorio || 'N/A'}</p></div>
-    <div class="field"><label>Voto</label><p>${data.voto || 'N/A'}</p></div>
-    <div class="field"><label>Dispositivo</label><p>${data.dispositivo || 'N/A'}</p></div>
+    <div class="field"><label>Ementa</label><p>${(data.ementa || 'N/A').replace(/</g, '&lt;')}</p></div>
+    <div class="field"><label>Relatorio</label><p>${(data.relatorio || 'N/A').replace(/</g, '&lt;')}</p></div>
+    <div class="field"><label>Voto</label><p>${(data.voto || 'N/A').replace(/</g, '&lt;')}</p></div>
+    <div class="field"><label>Dispositivo</label><p>${(data.dispositivo || 'N/A').replace(/</g, '&lt;')}</p></div>
     ${data.url_origem ? '<div class="field"><label>Fonte</label><p><a href="' + data.url_origem + '" target="_blank">' + data.url_origem + '</a></p></div>' : ''}
   `;
   document.getElementById('modal').style.display = 'block';
@@ -169,11 +302,132 @@ async function showDetail(id) {
 function closeModal() {
   document.getElementById('modal').style.display = 'none';
 }
-
-// Fecha modal ao clicar fora
 window.onclick = function(e) {
   if (e.target.id === 'modal') closeModal();
 };
+
+async function loadDashboard() {
+  const res = await fetch(API + '/api/stats');
+  const data = await res.json();
+  document.getElementById('dash-cards').innerHTML = `
+    <div class="dash-card"><div class="number">${data.total_acordaos}</div><div class="label">Acordaos</div></div>
+    <div class="dash-card"><div class="number">${data.tribunais.length}</div><div class="label">Tribunais</div></div>
+    <div class="dash-card"><div class="number">${data.areas.length}</div><div class="label">Areas</div></div>
+  `;
+  document.getElementById('dash-tribunais').innerHTML = data.tribunais.map(t => 
+    `<span style="background:var(--accent);color:#fff;padding:4px 10px;border-radius:4px;margin:4px;display:inline-block;font-size:13px;">${t}</span>`
+  ).join('');
+  document.getElementById('dash-areas').innerHTML = data.areas.map(a => 
+    `<span style="background:var(--light);color:var(--accent);padding:4px 10px;border-radius:4px;margin:4px;display:inline-block;font-size:13px;">${a}</span>`
+  ).join('');
+}
+
+async function loadIA() {
+  const [prompts, agentes, metodos] = await Promise.all([
+    fetch(API + '/api/prompts').then(r => r.json()),
+    fetch(API + '/api/agentes-mcp').then(r => r.json()),
+    fetch(API + '/api/metodos').then(r => r.json())
+  ]);
+  document.getElementById('prompts-list').innerHTML = prompts.prompts.map(p => 
+    `<div class="ia-section"><h3>${p.nome}</h3><p>${p.descricao}</p><button onclick="testPrompt('${p.id}')">Testar</button></div>`
+  ).join('');
+  document.getElementById('agentes-list').innerHTML = agentes.agentes.map(a => 
+    `<div class="ia-section"><h3>${a.nome}</h3><p>${a.descricao}</p></div>`
+  ).join('');
+  document.getElementById('metodos-list').innerHTML = metodos.metodos.map(m => 
+    `<div class="ia-section"><h3>${m.nome}</h3><p>${m.descricao}</p></div>`
+  ).join('');
+}
+
+async function testPrompt(id) {
+  const texto = prompt('Digite o texto para o prompt ' + id + ':');
+  if (!texto) return;
+  const endpoints = {
+    'analise_acordao': '/api/ia/analisar-acordao',
+    'conferencia_citacoes': '/api/ia/conferir-citacoes',
+    'extrator_argumentos': '/api/ia/extrair-argumentos',
+    'auditoria_acordao': '/api/ia/auditar-acordao',
+    'busca_jurisprudencia': '/api/ia/buscar-jurisprudencia',
+    'pesquisa_teses': '/api/ia/pesquisar-teses',
+    'leitura_profunda': '/api/ia/leitura-profunda',
+    'contraditorio_simulado': '/api/ia/contraditorio-simulado'
+  };
+  const paramNames = {
+    'analise_acordao': 'texto', 'conferencia_citacoes': 'citacoes',
+    'extrator_argumentos': 'decisao', 'auditoria_acordao': 'texto',
+    'busca_jurisprudencia': 'tema', 'pesquisa_teses': 'tema',
+    'leitura_profunda': 'documento', 'contraditorio_simulado': 'tese'
+  };
+  const url = API + endpoints[id] + '?' + paramNames[id] + '=' + encodeURIComponent(texto);
+  const res = await fetch(url);
+  const data = await res.json();
+  alert('Prompt gerado! Verifique o console (F12) para copiar.');
+  console.log('PROMPT GERADO:', data.prompt);
+}
+
+async function uploadPdf() {
+  const file = document.getElementById('pdf-file').files[0];
+  if (!file) { alert('Selecione um arquivo PDF.'); return; }
+  const formData = new FormData();
+  formData.append('file', file);
+  document.getElementById('parser-result').innerHTML = '<div class="loading">Processando PDF...</div>';
+  const res = await fetch(API + '/api/parser/upload', { method: 'POST', body: formData });
+  const data = await res.json();
+  if (data.error) {
+    document.getElementById('parser-result').innerHTML = '<div class="empty">' + data.error + '</div>';
+    return;
+  }
+  document.getElementById('parser-result').innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <span class="card-tribunal">${data.tribunal}</span>
+        <span class="card-numero">${data.numero_processo}</span>
+      </div>
+      <div class="field"><label>Relator</label><p>${data.relator}</p></div>
+      <div class="field"><label>Data</label><p>${data.data_julgamento}</p></div>
+      <div class="field"><label>Ementa</label><p>${(data.ementa || '').replace(/</g, '&lt;')}</p></div>
+      <div class="field"><label>Dispositivo</label><p>${(data.dispositivo || '').replace(/</g, '&lt;')}</p></div>
+    </div>
+  `;
+}
+
+function addToHistory(q) {
+  if (history.includes(q)) return;
+  history.unshift(q);
+  if (history.length > 20) history.pop();
+  localStorage.setItem('jurisbusca_history', JSON.stringify(history));
+}
+
+function loadHistory() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = history.map(q => `<li onclick="document.getElementById('query').value='${q}'; showTab('busca'); doSearch();">${q}</li>`).join('') || '<li>Nenhuma busca realizada ainda.</li>';
+  const favList = document.getElementById('fav-list');
+  favList.innerHTML = favorites.map(f => `<li onclick="showDetail(${f.id})">${f.tribunal} - ${f.numero}</li>`).join('') || '<li>Nenhum favorito salvo.</li>';
+}
+
+function addFavorite(id) {
+  fetch(API + '/api/acordao/' + id).then(r => r.json()).then(data => {
+    if (!favorites.find(f => f.id === id)) {
+      favorites.push({ id, tribunal: data.tribunal, numero: data.numero });
+      localStorage.setItem('jurisbusca_favorites', JSON.stringify(favorites));
+      alert('Favorito salvo!');
+    } else {
+      alert('Ja esta nos favoritos.');
+    }
+  });
+}
+
+function clearHistory() {
+  history = [];
+  localStorage.removeItem('jurisbusca_history');
+  loadHistory();
+}
+
+function exportResults(format) {
+  const items = document.querySelectorAll('.card');
+  if (items.length === 0) { alert('Nenhum resultado para exportar.'); return; }
+  alert('Exportacao ' + format.toUpperCase() + ' disponivel via API. Use /api/search?q=termo&limit=100');
+}
 
 loadStats();
 </script>

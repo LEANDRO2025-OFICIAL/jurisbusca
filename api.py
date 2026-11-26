@@ -46,6 +46,7 @@ from busca_vetorial import (
 )
 from rag import buscar_e_montar_rag, estatisticas as estatisticas_rag
 from scrapers import buscar_todos
+from dados import get_tribunais, get_areas, total_tribunais, total_areas
 
 app = FastAPI(
     title="JurisBusca - Busca de Jurisprudencia + IA",
@@ -120,6 +121,16 @@ def api_tribunais():
 @app.get("/api/areas")
 def api_areas():
     return {"areas": list_areas()}
+
+
+@app.get("/api/tribunais-lista")
+def api_tribunais_lista():
+    return {"tribunais": get_tribunais(), "total": total_tribunais()}
+
+
+@app.get("/api/areas-lista")
+def api_areas_lista():
+    return {"areas": get_areas(), "total": total_areas()}
 
 
 # === ENDPOINT DE BUSCA VETORIAL ===
