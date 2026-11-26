@@ -7,6 +7,7 @@ WORKDIR /app
 # Instala dependências do sistema (necessárias para algumas bibliotecas Python)
 RUN apt-get update && apt-get install -y \
     gcc \
+    libmupdf-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copia requirements e instala dependências Python
